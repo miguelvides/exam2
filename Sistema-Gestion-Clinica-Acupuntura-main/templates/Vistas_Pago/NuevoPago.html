@@ -1,0 +1,94 @@
+{% extends 'base_pacientes.html' %}
+
+{% block content %}
+
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header bg-primary text-white">
+          <h3 class="mb-0">Nuevo Pago</h3>
+        </div>
+        <div class="card-body">
+          <form action="{% url 'NuevoPago' paciente_id=paciente.id_paciente %}" method="POST" id="formNuevoPago">
+            {% csrf_token %}
+            <div class="form-row">
+              <div class="col-md-6">
+                <label for="pago_fecha">Fecha del Pago:</label>
+                <input type="date" class="form-control" id="pago_fecha" name="pago_fecha" required readonly/>
+              </div>
+              <div class="col-md-6">
+                <label for="hora_pago">Hora del pago:</label>
+                <input type="time" class="form-control" id="hora_pago" name="hora_pago" required readonly/>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="consultationSelect">Seleccione la consulta:</label>
+              <select class="form-control" id="motivo_consulta" name="consulta_id">
+                {% for consulta in consultas %}
+                <option value="{{ consulta.id_consulta }}">{{ consulta.obtener_consulta_fecha_formateada }} - {{ consulta.motivo_consulta }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-group mt-3">
+              <label for="paymentAmount">Cantidad en USD:</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-dollar-sign"></i></span>
+                <input type="text" class="form-control" id="paymentAmount" name="monto_pago" placeholder="Ingrese la cantidad en USD">
+              </div>
+              <div class="invalid-feedback">
+                Por favor, ingrese un monto válido.
+              </div>
+            </div>
+            <div class="text-center mt-4">
+              <a href="{% url 'ListarPagos' paciente_id=paciente.id_paciente %}" class="btn btn-secondary">
+                <i class="fa fa-arrow-left"></i>&nbsp; Regresar
+              </a>
+              <button type="submit" name="submit" class="btn btn-success">
+                <i class="fa fa-save"></i>&nbsp; Guardar Pago
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    var fechaActual = new Date();
+    var fecha = fechaActual.toISOString().slice(0, 10);
+    var hora = fechaActual.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    document.getElementById('pago_fecha').value = fecha;
+    document.getElementById('hora_pago').value = hora;
+
+    var montoInput = document.getElementById("paymentAmount");
+    var formulario = document.getElementById("formNuevoPago");
+
+    montoInput.addEventListener("input", function() {
+      if (validarMonto(this.value)) {
+        this.classList.remove("is-invalid");
+        this.classList.add("is-valid");
+      } else {
+        this.classList.remove("is-valid");
+        this.classList.add("is-invalid");
+      }
+    });
+
+    formulario.addEventListener("submit", function(event) {
+      if (!validarMonto(montoInput.value)) {
+        montoInput.classList.add("is-invalid");
+        event.preventDefault();
+      }
+    });
+
+    function validarMonto(valor) {
+      var montoRegex = /^\$?\d+(\.\d{1,2})?$/;
+      return montoRegex.test(valor);
+    }
+  });
+</script>
+
+{% endblock %}

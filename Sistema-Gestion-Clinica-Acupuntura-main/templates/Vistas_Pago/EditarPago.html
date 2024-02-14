@@ -1,0 +1,205 @@
+{% extends 'base_pacientes.html' %}
+{% block content %}
+
+<!-- Content Header (Page header) -->
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+    </div>
+  </div>
+  <!-- /.container-fluid -->
+</section>
+<form
+<form action="{% url 'EditarPago' paciente_id=paciente.id_paciente pago_id=pago.id_pago %}" method="POST" id="formEditarPago">
+  {% csrf_token %}
+  <section class="content">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-12 d-flex justify-content-center">
+          
+          <!-- Default box -->
+          <div class="card">
+            <div class="card-header bg-primary text-white">
+              <h3 class="mb-0">Editar Pago</h3>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col">
+                  <p>ID del Pago: {{pago.id_pago}}</p>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="row">
+                  <div class="col">
+                    <div class="form-group">
+                      <label for="consultationSelect">Seleccione la consulta:</label>
+                      <select class="form-control" id="consulta_id" name="consulta_id">
+                          {% for consulta in consultas %}
+                              {% if not consulta.deshabilitado or not consulta.pagada %}
+                                  <option value="{{ consulta.id_consulta }}"
+                                      {% if consulta.id_consulta == pago.id_consulta.id_consulta %}selected{% endif %}>
+                                      {{ consulta.obtener_consulta_fecha_formateada }} - {{ consulta.motivo_consulta }}
+                                  </option>
+                              {% endif %}
+                          {% endfor %}
+                      </select>
+                  </div>
+                  
+                  
+                    <div class="form-group">
+                      <label for="paymentAmount">Cantidad en USD:</label>
+                      <div class="input-group">
+                        <div class = "input-group-prepend">
+                          <span class="input-group-text"><i class="fas fa-dollar-sign"></i></span>
+                        </div>
+                        <input type="text" class="form-control" id="paymentAmount" name="monto_pago" placeholder="Ingrese la cantidad en USD" value="{{ pago.monto_pago }}">
+                        <span class="input-group-append">
+                          <button class="btn btn-outline-secondary" type="button" onclick="mostrarInstrucciones(this)">
+                            <i class="fas fa-info-circle"></i>
+                          </button>
+                        </span>
+                      </div>
+                      <div class="instrucciones d-none">
+                        Ingrese el monto del pago. No utilice simbolos ni caracteres especiales.
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label for="pago_fecha">Fecha del Pago:</label>
+                      <div class="input-group">
+                        <div class="input-group-prepend">
+                          <span class="input-group-text"><i class="far fa-calendar-alt"></i></span>
+                        </div>
+                        <input type="date" class="form-control" id="pago_fecha" name="pago_fecha" value="{{ pago.fecha_pago|date:'Y-m-d' }}"/>
+                        <span class="input-group-append">
+                          <button class="btn btn-outline-secondary" type="button" onclick="mostrarInstrucciones(this)">
+                            <i class="fas fa-info-circle"></i>
+                          </button>
+                        </span>
+                      </div>
+                      <div class="instrucciones d-none">
+                        Ingrese la fecha del pago correctamente; Debe ingresar una fecha actual o anterior a la fecha actual
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            </div>
+          <!-- /.card -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Content Header (Page header) -->
+  <section class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2 d-flex justify-content-between">
+        <div class="col-sm-6">
+          <a
+            href="{% url 'ListarPagos' paciente_id=paciente.id_paciente %}"
+            class="btn btn-primary float-left"
+            ><i class="fas fa-arrow-left"></i>&nbsp; Volver al Historial</a
+          >
+        </div>
+
+        <div class="col-sm-6">
+          <button
+            type="submit"
+            name="submit"
+            class="btn btn-success float-right">
+            <i class="fa fa-save"></i>&nbsp; Actualizar Pago
+          </button>
+        </div>
+
+      </div>
+    </div>
+    <!-- /.container-fluid -->
+  </section>
+</form>
+
+<script>
+  // Eliminar espacios en blanco al cargar la página
+  window.addEventListener('DOMContentLoaded', function() {
+    var textarea = document.getElementById('observacion_pago');
+    textarea.value = textarea.value.trim();
+  });
+
+</script>
+<script>
+  // Función para mostrar u ocultar las instrucciones de un campo
+  function mostrarInstrucciones(boton) {
+    var instrucciones = boton.parentNode.parentNode.parentNode.querySelector(".instrucciones");
+    instrucciones.classList.toggle("d-none");
+  }
+</script>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    // Obtener referencias a los elementos del formulario
+    var montoInput = document.getElementById("paymentAmount");
+    var fechaInput = document.getElementById("pago_fecha");
+    var formulario = document.getElementById("formEditarPago");
+
+    // Agregar evento de validación al campo de monto
+    montoInput.addEventListener("input", function() {
+      if (validarMonto(this.value)) {
+        this.classList.remove("is-invalid");
+        this.classList.add("is-valid");
+      } else {
+        this.classList.remove("is-valid");
+        this.classList.add("is-invalid");
+      }
+    });
+
+    // Agregar evento de validación al campo de fecha
+    fechaInput.addEventListener("input", function() {
+      if (validarFecha(this.value)) {
+        this.classList.remove("is-invalid");
+        this.classList.add("is-valid");
+      } else {
+        this.classList.remove("is-valid");
+        this.classList.add("is-invalid");
+      }
+    });
+
+    // Agregar evento de envío del formulario
+    formulario.addEventListener("submit", function(event) {
+      // Validar el campo de monto antes de enviar el formulario
+      if (!validarMonto(montoInput.value)) {
+        montoInput.classList.add("is-invalid");
+        event.preventDefault(); // Evitar el envío del formulario si hay errores
+      }
+
+      if (!validarFecha(fechaInput.value)) {
+        fechaInput.classList.add("is-invalid");
+        event.preventDefault(); // Evitar el envío del formulario si hay errores
+      }
+    });
+
+    // Función de validación para el campo de monto
+    function validarMonto(valor) {
+      var montoRegex = /^\$?\d+(\.\d{1,2})?$/; // Expresión regular para número decimal con hasta 2 decimales y opcionalmente un signo de dólar al principio
+      return montoRegex.test(valor);
+    }
+    
+
+    // Función de validación para el campo de fecha
+    function validarFecha(valor) {
+      var fechaRegex = /^\d{4}-\d{2}-\d{2}$/; // Expresión regular para fecha
+      if (!fechaRegex.test(valor)) {
+        return false; // La fecha no tiene el formato correcto
+      } 
+
+      var fechaIngresada = new Date(valor);
+      var fechaActual = new Date();
+      fechaActual.setHours(0, 0, 0, 0); // Establecer las horas, minutos, segundos y milisegundos de la fecha actual a cero para comparar solo las fechas
+
+      if (fechaIngresada > fechaActual) {
+        return false; // La fecha es posterior a la fecha actual
+      }
+
+      return true; // La fecha es válida 
+    }
+  });
+</script>
+
+{% endblock %}
